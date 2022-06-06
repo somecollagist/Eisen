@@ -1,0 +1,7 @@
+[build]
+target = "targets/x64.json"
+rustflags = ["-C", "link-arg=-nostdlib", "-C", "link-arg=-static"]
+
+[unstable]
+build-std-features = ["compiler-builtins-mem"]
+build-std = ["core", "compiler_builtins"]
