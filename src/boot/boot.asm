@@ -10,7 +10,9 @@ start:
     ; setup paging
     call setup_page_tables
     call enable_paging
-
+    
+    ; no interrupts and load GDT
+    cli
     lgdt [gdt64.pointer]
 
     ; update selectors
