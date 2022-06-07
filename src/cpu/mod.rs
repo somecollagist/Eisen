@@ -1,1 +1,1 @@
-pub mod irq;
+pub mod gdt;

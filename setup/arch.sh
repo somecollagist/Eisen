@@ -1,5 +1,4 @@
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-sudo pacman -S --needed binutils grub mtools libisoburn nasm qemu
+sudo pacman -S --needed binutils grub mtools libisoburn nasm qemu rustup
 rustup update nightly
 rustup default nightly
 cargo install xargo
