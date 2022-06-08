@@ -12,14 +12,14 @@ struct GDTEntry{
 	basehigh:	u8
 }
 
-fn newGDTEntry(base: u32, limit: u32, access: u8, flags: u8) -> GDTEntry{
+const fn new_gdtentry(base: u32, limit: u32, access: u8, flags: u8) -> GDTEntry{
 	GDTEntry {
-		limitlow:		(limit & 0xFFFF) 								as u16,
-		baselow:		(base & 0xFFFF)									as u16,
-		basemid:		((base >> 16) & 0xFF)							as u8,
-		access:			(access)										as u8,
-		limitflags:		(((limit >> 16) & 0xF) | (flags as u32 & 0xF0))	as u8,
-		basehigh:		((base >> 24) & 0xFF)							as u8
+		limitlow:	(limit & 0xFFFF) 								as u16,
+		baselow:	(base & 0xFFFF)									as u16,
+		basemid:	((base >> 16) & 0xFF)							as u8,
+		access:		(access)										as u8,
+		limitflags:	(((limit >> 16) & 0xF) | (flags as u32 & 0xF0))	as u8,
+		basehigh:	((base >> 24) & 0xFF)							as u8
 	}
 }
 
@@ -42,16 +42,16 @@ struct TSSEntry{
 }
 
 // use u64 since it's a 64-bit OS (duh)
-fn newTSSEntry(addr: u64) -> TSSEntry {
+const fn new_tssentry(addr: u64) -> TSSEntry {
 	TSSEntry{
-		size:			size_of::<TSSStruct>() as u16,
-		baselow:		((addr as u16) & 0xFFFF),
-		basemid:		(((addr >> 16) as u8) & 0xFF),
-		flags1:			0b10001001,
-		flags2:			0b00000000,
-		basehigh:		(((addr >> 24) as u8) & 0xFF),
-		baseupper:		((addr >> 32) as u32),
-		reserved:		0
+		size:		size_of::<TSSStruct>() as u16,
+		baselow:	((addr as u16) & 0xFFFF),
+		basemid:	(((addr >> 16) as u8) & 0xFF),
+		flags1:		0b10001001,
+		flags2:		0b00000000,
+		basehigh:	(((addr >> 24) as u8) & 0xFF),
+		baseupper:	((addr >> 32) as u32),
+		reserved:	0
 	}
 }
 
@@ -67,7 +67,7 @@ struct TSSStruct{
 	iomap_base:	u16
 }
 
-const GDTENTRIES		: usize = 6;
+const GDTENTRIES	: usize = 6;
 
 #[repr(C, packed)]
 struct g_GDT{
@@ -75,7 +75,7 @@ struct g_GDT{
 	tss:		TSSEntry,
 }
 
-const tss: TSSStruct = TSSStruct{
+const TSS: TSSStruct = TSSStruct{
 	reserved0:	0,
 	rsp:		[0; 3],
 	reserved1:	0,
@@ -87,7 +87,6 @@ const tss: TSSStruct = TSSStruct{
 };
 
 extern "C" {
-	fn tss_flush();
 	fn gdt_load(limit: u16, offset: u64);
 }
 
@@ -96,10 +95,10 @@ pub fn gdt_init(){
 
 	let mut gdt: g_GDT = g_GDT {
 		gdt: [
-			newGDTEntry(0, 0, 0, 0);
+			new_gdtentry(0, 0, 0, 0);
 			GDTENTRIES
 			],
-		tss: newTSSEntry((&tss as *const _) as u64)
+		tss: new_tssentry((&TSS as *const _) as u64)
 	};
 
 	let gdt_desc: GDTDesc = GDTDesc{
@@ -108,17 +107,17 @@ pub fn gdt_init(){
 	};
 
 	//null descriptor
-	gdt.gdt[0] = newGDTEntry(0, 0, 0, 0);
+	gdt.gdt[0] = new_gdtentry(0, 0, 0, 0);
 	//kernel code
-	gdt.gdt[1] = newGDTEntry(0, 0xFFFFF, 0x9A, 0xA);
+	gdt.gdt[1] = new_gdtentry(0, 0xFFFFF, 0x9A, 0xA);
 	//kernel data
-	gdt.gdt[2] = newGDTEntry(0, 0xFFFFF, 0x92, 0xC);
+	gdt.gdt[2] = new_gdtentry(0, 0xFFFFF, 0x92, 0xC);
 	//extra null descriptor?
-	gdt.gdt[3] = newGDTEntry(0, 0, 0, 0);
+	gdt.gdt[3] = new_gdtentry(0, 0, 0, 0);
 	//user code
-	gdt.gdt[4] = newGDTEntry(0, 0xFFFFF, 0xFA, 0xA);
+	gdt.gdt[4] = new_gdtentry(0, 0xFFFFF, 0xFA, 0xA);
 	//user data
-	gdt.gdt[5] = newGDTEntry(0, 0xFFFFF, 0xF2, 0xC);
+	gdt.gdt[5] = new_gdtentry(0, 0xFFFFF, 0xF2, 0xC);
 
 	unsafe{ gdt_load(gdt_desc.limit, gdt_desc.offset); }
 }

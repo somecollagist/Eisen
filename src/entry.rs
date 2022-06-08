@@ -19,7 +19,7 @@ pub extern "C" fn kmain() -> ! {
 }
 
 #[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
+pub extern "C" fn kpanic(_info: &PanicInfo) -> ! {
 	unsafe {
 		*(0xB9000 as *mut u8) = 0x50;
 		*(0xB9001 as *mut u8) = 0x50;

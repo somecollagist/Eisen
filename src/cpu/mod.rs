@@ -1,6 +1,7 @@
 use core::arch::asm;
 
 pub mod gdt;
+pub mod idt;
 
 // pub fn outb(port: u16, data: u8) -> () {
 // 	unsafe {
