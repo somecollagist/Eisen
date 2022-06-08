@@ -12,7 +12,7 @@ ASMIDR := $(shell dirname $(shell echo $(ASMSRC) | tr ' ' '\n' | sort -u | xargs
 
 ASMINC := $(addprefix -i ,$(ASMIDR))
 
-all: prebuild build run
+all: prebuild build run clean
 
 prebuild:
 	clear
@@ -24,7 +24,6 @@ build: $(ASMTAR)
 	~/.cargo/bin/xargo build -Zbuild-std
 	ld --nmagic --output=$(BINLOC) --script=linker.ld $^ $(BIN)/$(TARGET)/debug/libeisen.a
 	grub-mkrescue -o eisen.iso $(ISO)
-	rm -f $(BINLOC)
 
 $(BIN)/%.o: $(SRC)/%.asm
 	mkdir -p $(shell dirname $@)
@@ -32,3 +31,6 @@ $(BIN)/%.o: $(SRC)/%.asm
 
 run:
 	qemu-system-x86_64 -cdrom eisen.iso
+
+clean:
+	rm -f $(BINLOC)

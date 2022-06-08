@@ -3,24 +3,17 @@
 #![no_main]
 
 mod cpu;
-mod screen;
+mod drivers;
 
 use core::panic::PanicInfo;
-use screen::{colours, print::kprint};
+use drivers::screen::{colours, print::kprint};
 
 #[no_mangle]
 pub extern "C" fn kmain() -> ! {
-	unsafe {
-		init();
-	}
-	kprint("Eisen OS - Running Checks...\n", colours::OUT);
+	unsafe{ init(); }
 
-	kprint("Loading GDT...\n", colours::PROC);
-	cpu::gdt::init();
-	kprint("Loaded GDT\n", colours::OK);
-
-	kprint("EISEN> \n", colours::QUERY);
-	kprint("OS\n", colours::ERR);
+	// cpu::outb(0x3D4, 0x0A);
+	// cpu::outb(0x3D5, 0x20);
 
 	loop {}
 }
@@ -35,6 +28,13 @@ fn panic(_info: &PanicInfo) -> ! {
 }
 
 unsafe fn init() {
-	screen::print::init();
-	cpu::gdt::init();
+	drivers::screen::print::init();
+
+	kprint("Eisen OS - Running Checks...\n", colours::OUT);
+
+	kprint("Loading GDT...\n", colours::PROC);
+	cpu::gdt::gdt_init();
+	kprint("Loaded GDT\n", colours::OK);
+
+	kprint("All checks passed!\n", colours::OK);
 }
