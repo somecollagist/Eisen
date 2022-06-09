@@ -34,6 +34,7 @@ unsafe fn init() {
 
 	kprint("Loading GDT...\n", colours::PROC);
 	cpu::gdt::gdt_init();
+	cpu::idt::idt_init();
 	kprint("Loaded GDT\n", colours::OK);
 
 	kprint("All checks passed!\n", colours::OK);

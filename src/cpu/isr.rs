@@ -1,3 +1,8 @@
+#[allow(dead_code)]
+
+use crate::drivers::screen::{print, colours};
+
+#[no_mangle]
 pub extern "C" fn isr_handler(){
-	loop{}
+	print::kprint("idr handler", colours::ERR);
 }

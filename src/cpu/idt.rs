@@ -62,6 +62,7 @@ pub fn idt_init(){
 			set_idtentry(i as usize, int_vt[i as usize], 0, 0x8E)
 		}
 
-		asm!("lidt {idtd}", idtd = in(reg)((&idt_desc as *const _) as u64));
+		asm!("lidt [{}]", in(reg)((&idt_desc as *const _) as u64));
+		// maybe try to use sti in assembly at some point but it doesn't seem to like it...
 	}
 }
