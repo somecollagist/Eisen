@@ -1,8 +1,7 @@
-use core::arch::asm;
-use core::mem::size_of;
+use crate::cpu::{outb};
+use crate::drivers::screen::{print, colours};
 
 #[repr(C, packed)]
-#[derive(Clone, Copy)]
 struct IDTEntry{
 	offsetlow:	u16,
 	selector:	u16,
@@ -13,56 +12,38 @@ struct IDTEntry{
 	reserved:	u32
 }
 
-const fn new_idtentry(offset: u64, ist: u8, flags: u8) -> IDTEntry{
-	IDTEntry {
-		offsetlow:	(offset as u16),
-		selector:	0x08,
-		ist_resv:	ist,
-		flags:		(flags | 0b1000000),	//Bit 8 must be 1 in order to be valid
-		offsetmid:	((offset >> 16) as u16),
-		offsethigh:	((offset >> 32) as u32),
-		reserved:	0
-	}
-}
-
-#[repr(C, packed)]
-pub struct IDTDesc{
-	limit:		u16,
-	offset:		u64
-}
-
-static mut idt: [IDTEntry; 256] = [new_idtentry(0, 0, 0); 256];
-
 extern "C" {
-	static int_vt: [u64; 48];
-}
-
-pub fn set_idtentry(idx: usize, offset: u64, ist: u8, flags: u8){
-	unsafe{
-		idt[idx] = IDTEntry{
-			offsetlow:	(offset as u16),
-			selector:	0x08,
-			ist_resv:	ist,
-			flags:		flags,
-			offsetmid:	((offset >> 16) as u16),
-			offsethigh:	((offset >> 32) as u32),
-			reserved:	0
-		}
-	}
+	static mut _idt:	[IDTEntry; 256];
+	static isr1:		u64;
+	fn load_idt();
 }
 
 pub fn idt_init(){
 	unsafe{
-		let mut idt_desc: IDTDesc = IDTDesc{
-			limit:	(((size_of::<IDTEntry>() * 256) - 1) as u16),
-			offset:	(&idt as *const _) as u64
-		};
+		let isrptr = (&isr1 as *const _) as u64;
 
-		for i in 0..48{
-			set_idtentry(i as usize, int_vt[i as usize], 0, 0x8E)
+		for x in 0..256{
+			let x = x as usize;
+	
+			_idt[x].offsetlow 	= isrptr as u16;
+			_idt[x].selector 	= 0x08;
+			_idt[x].ist_resv 	= 0;
+			_idt[x].flags 		= 0x8E;
+			_idt[x].offsetmid 	= (isrptr >> 16) as u16;
+			_idt[x].offsethigh 	= (isrptr >> 32) as u32;
+			_idt[x].reserved	= 0;
 		}
-
-		asm!("lidt [{}]", in(reg)((&idt_desc as *const _) as u64));
-		// maybe try to use sti in assembly at some point but it doesn't seem to like it...
+		
+		outb(0x21, 0xFD);
+		outb(0xA1, 0xFF);
+		load_idt();
 	}
+}
+
+#[no_mangle]
+pub extern "C" fn isr1_handler(){
+	print::kprint("?", colours::ERR);
+
+	outb(0x20, 0x20);
+	outb(0xA0, 0x20);
 }
